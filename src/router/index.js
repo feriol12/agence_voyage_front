@@ -1,23 +1,59 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import LoginVieww from '@/views/auth/LoginVieww.vue'
+import RegisterVieww from '@/views/auth/RegisterVieww.vue'
+import DashboardUser from '@/views/DashboardUser.vue'
+
+const routes = [
+  {
+    path: '/',
+    name: 'home',
+    component: HomeView,
+  },
+  {
+    path: '/register',
+    name: 'register',
+    component: RegisterVieww,
+  },
+  {
+    path: '/login',
+    name: 'login',
+    component: LoginVieww,
+  },
+  {
+    path: '/dashboard',
+    name: 'Dashboard',
+    component: DashboardUser,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/about',
+    name: 'about',
+    component: () => import('../views/AboutView.vue'),
+  },
+]
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
-  routes: [
-    {
-      path: '/',
-      name: 'home',
-      component: HomeView,
-    },
-    {
-      path: '/about',
-      name: 'about',
-      // route level code-splitting
-      // this generates a separate chunk (About.[hash].js) for this route
-      // which is lazy-loaded when the route is visited.
-      component: () => import('../views/AboutView.vue'),
-    },
-  ],
+  history: createWebHistory(),
+  routes,
+})
+
+router.beforeEach((to, from) => {
+  const token = localStorage.getItem('token')
+  const authRoutes = ['/login', '/register']  // Routes d'auth
+
+  // 1. Si la route nécessite un token et qu'il n'y en a pas
+  if (to.meta.requiresAuth && !token) {
+    return '/login'
+  }
+
+  // 2. Si l'utilisateur a un token et essaie d'aller sur login/register
+  if (token && authRoutes.includes(to.path)) {
+    return '/dashboard'
+  }
+
+  // 3. Sinon, on laisse passer
+  return true
 })
 
 export default router
