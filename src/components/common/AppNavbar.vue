@@ -1,5 +1,6 @@
 <template>
-  <nav class="bg-[#0F3B5C] shadow-md">
+  <!-- fixed top-0 left-0 w-full z-50 : la navbar reste en haut même en scrollant -->
+  <nav class="bg-[#0F3B5C] shadow-md fixed top-0 left-0 w-full z-50">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
         
@@ -98,15 +99,14 @@ const router = useRouter()
 const dropdownOpen = ref(false)
 const mobileMenuOpen = ref(false)
 
-// Données utilisateur (à remplacer par ton store Pinia plus tard)
-// En attendant l'authentification, tu mocks les données
+// Données utilisateur (mock en attendant l'auth)
 const user = ref({
   name: 'Jean Martin',
   role: 'admin', // 'admin' ou 'client'
   initials: 'JM'
 })
 
-// Nombre de notifications non lues (à remplacer par ton store)
+// Nombre de notifications non lues
 const unreadCount = ref(3)
 
 // Computed
@@ -144,18 +144,9 @@ const isActive = (path) => {
 }
 
 const logout = () => {
-  // À remplacer par ton store d'auth
   if (confirm('Voulez-vous vraiment vous déconnecter ?')) {
-    // Ici : appel au store pour déconnexion
-    // router.push('/login')
+    // Appel au store plus tard
     console.log('Déconnexion')
   }
 }
-
-// Fermer le dropdown quand on clique ailleurs (optionnel)
-// À ajouter avec un click outside
 </script>
-
-<style scoped>
-/* Les transitions si besoin */
-</style>
