@@ -1,31 +1,31 @@
 <template>
-  <nav class="bg-[#0F3B5C] shadow-md">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+  <nav v-if="authStore.user !== null"  class="bg-[#0F3B5C] shadow-md">
+    <div class="px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
-        
+
         <!-- Logo -->
         <div class="flex items-center">
-          <a href="/" class="text-white font-bold text-xl">
+          <router-link to="/" class="text-white font-bold text-xl">
             ✈️ AgenceVoyage
-          </a>
+          </router-link>
         </div>
 
         <!-- Menu desktop (caché sur mobile) -->
         <div class="hidden md:flex items-center space-x-2">
-          <a 
-            v-for="item in menuItems" 
+          <router-link
+            v-for="item in menuItems"
             :key="item.path"
-            :href="item.path"
+            :to="item.path"
             class="text-gray-200 hover:bg-[#E67E22] hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
             :class="{ 'bg-[#E67E22] text-white': isActive(item.path) }"
           >
             {{ item.name }}
-          </a>
+          </router-link>
         </div>
 
         <!-- Droite : notifications + utilisateur -->
         <div class="flex items-center space-x-4">
-          
+
           <!-- Icône notifications -->
           <button class="relative text-gray-200 hover:text-white">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -47,12 +47,12 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
               </svg>
             </button>
-            
+
             <!-- Dropdown menu -->
             <div v-if="dropdownOpen" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-              <a href="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">👤 Mon profil</a>
+              <router-link to="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">👤 Mon profil</router-link>
               <div class="border-t border-gray-100 my-1"></div>
-              <button @click="logout" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+              <button @click="handleLogout" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
                 🚪 Déconnexion
               </button>
             </div>
@@ -73,49 +73,50 @@
     <!-- Menu mobile (affiché quand ouvert) -->
     <div v-if="mobileMenuOpen" class="md:hidden bg-[#0F3B5C] border-t border-[#1E4A6E] py-2">
       <div class="px-2 space-y-1">
-        <a 
-          v-for="item in menuItems" 
+        <router-link
+          v-for="item in menuItems"
           :key="item.path"
-          :href="item.path"
+          :to="item.path"
           class="block text-gray-200 hover:bg-[#E67E22] hover:text-white px-3 py-2 rounded-md text-base font-medium"
+          @click="mobileMenuOpen = false"
         >
           {{ item.name }}
-        </a>
+        </router-link>
       </div>
     </div>
   </nav>
+  <div v-else class="bg-[#0F3B5C] shadow-md h-16">
+    <!-- Squelette de chargement -->
+    <div class="px-4 sm:px-6 lg:px-8 h-full flex items-center">
+      <div class="text-white">Chargement...</div>
+    </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/useAuthStore'
 
-// Router
 const route = useRoute()
-const router = useRouter()
+// const router = useRouter()
+const authStore = useAuthStore()
 
 // États locaux
 const dropdownOpen = ref(false)
 const mobileMenuOpen = ref(false)
-
-// Données utilisateur (à remplacer par ton store Pinia plus tard)
-// En attendant l'authentification, tu mocks les données
-const user = ref({
-  name: 'Jean Martin',
-  role: 'admin', // 'admin' ou 'client'
-  initials: 'JM'
-})
-
-// Nombre de notifications non lues (à remplacer par ton store)
 const unreadCount = ref(3)
 
-// Computed
-const userName = computed(() => user.value.name)
-const userInitials = computed(() => user.value.initials)
+// Computed depuis le store
+const userName = computed(() => authStore.user?.name || 'Invité')
+const userInitials = computed(() => {
+  const name = authStore.user?.name || 'U'
+  return name.substring(0, 2).toUpperCase()
+})
 
-// Menu selon le rôle
+// Menu selon le rôle (depuis le store)
 const menuItems = computed(() => {
-  if (user.value.role === 'admin') {
+  if (authStore.isAdmin) {
     return [
       { name: 'Dashboard', path: '/admin/dashboard' },
       { name: 'Clients', path: '/admin/clients' },
@@ -143,19 +144,21 @@ const isActive = (path) => {
   return route.path === path || route.path.startsWith(path + '/')
 }
 
-const logout = () => {
-  // À remplacer par ton store d'auth
+const handleLogout = async () => {
   if (confirm('Voulez-vous vraiment vous déconnecter ?')) {
-    // Ici : appel au store pour déconnexion
-    // router.push('/login')
-    console.log('Déconnexion')
+    await authStore.logout()
   }
 }
 
-// Fermer le dropdown quand on clique ailleurs (optionnel)
-// À ajouter avec un click outside
-</script>
+// Fermer le dropdown quand on clique ailleurs
+const handleClickOutside = (event) => {
+  if (dropdownOpen.value && !event.target.closest('.relative')) {
+    dropdownOpen.value = false
+  }
+}
 
-<style scoped>
-/* Les transitions si besoin */
-</style>
+// Ajouter l'écouteur d'événement
+if (typeof window !== 'undefined') {
+  document.addEventListener('click', handleClickOutside)
+}
+</script>
