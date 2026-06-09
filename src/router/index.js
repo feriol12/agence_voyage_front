@@ -3,6 +3,7 @@ import HomeView from '../views/HomeView.vue'
 import LoginVieww from '@/views/auth/LoginVieww.vue'
 import RegisterVieww from '@/views/auth/RegisterVieww.vue'
 import DashboardUser from '@/views/DashboardUser.vue'
+import DashboardAdmin from '@/views/DashboardAdmin.vue'
 
 const routes = [
   {
@@ -24,6 +25,12 @@ const routes = [
     path: '/dashboard',
     name: 'Dashboard',
     component: DashboardUser,
+    meta: { requiresAuth: true }
+  },
+   {
+    path: '/admin/dashboard',
+    name: 'AdminDashboard',
+    component: DashboardAdmin,
     meta: { requiresAuth: true }
   },
   {

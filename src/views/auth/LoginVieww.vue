@@ -98,6 +98,80 @@
 <script setup>
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/useAuthStore'
+import { authApi } from '@/services/apiAuth'
+
+
+const backgroundImage = ref('https://images.pexels.com/photos/14694797/pexels-photo-14694797.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2')
+
+const router = useRouter()
+const authStore = useAuthStore()
+const loading = ref(false)
+const errorMessage = ref('')
+
+const form = reactive({
+  email: '',
+  password: '',
+  remember: false
+})
+
+const handleLogin = async () => {
+  if (!form.email || !form.password) {
+    errorMessage.value = 'Please fill in all fields'
+    return
+  }
+
+  loading.value = true
+  errorMessage.value = ''
+
+  try {
+    // ✅ 1. Appel API
+    const response = await authApi.login({
+      email: form.email,
+      password: form.password
+    })
+
+    console.log('Réponse brute:', response.data)
+
+    // ✅ 2. Construire l'utilisateur correctement
+    const userData = {
+      id: response.data.user.id,
+      name: response.data.user.name,
+      email: response.data.user.email,
+      is_admin: response.data.is_admin,
+      role: response.data.role
+    }
+
+    // ✅ 3. Stocker immédiatement
+    localStorage.setItem('token', response.data.token)
+    localStorage.setItem('user', JSON.stringify(userData))
+
+    // ✅ 4. Mettre à jour le store AVANT la redirection
+    authStore.token = response.data.token
+    authStore.user = userData
+    authStore.loading = false
+
+    // ✅ 5. Petite pause pour être sûr que le store est à jour
+    await new Promise(resolve => setTimeout(resolve, 100))
+
+    // ✅ 6. Redirection selon le rôle
+    if (userData.is_admin) {
+      router.push('/admin/dashboard')
+    } else {
+      router.push('dashboard')
+    }
+
+  } catch (error) {
+    console.error('Erreur:', error.response?.data)
+    errorMessage.value = error.response?.data?.message || 'Invalid email or password'
+  } finally {
+    loading.value = false
+  }
+}
+</script>
+<!-- <script setup>
+import { ref, reactive } from 'vue'
+import { useRouter } from 'vue-router'
 import { authApi } from '@/services/apiAuth'
 
 // 🔥 L'IMAGE DE FOND
@@ -130,22 +204,38 @@ const handleLogin = async () => {
       password: form.password
     })
 
-    // Stocker le token
+    console.log('Réponse complète:', response.data)  // ← DEBUG
+
+    // 1. Stocker le token
     localStorage.setItem('token', response.data.token)
 
-    // Optionnel : stocker si "remember me"
+    // 2. Stocker l'utilisateur avec is_admin et role
+    const user = {
+      id: response.data.user.id,
+      name: response.data.user.name,
+      email: response.data.user.email,
+      is_admin: response.data.is_admin,      // ← IMPORTANT !
+      role: response.data.role               // ← IMPORTANT !
+    }
+    localStorage.setItem('user', JSON.stringify(user))
+
+    // 3. Option "remember me"
     if (form.remember) {
       localStorage.setItem('remember_email', form.email)
     } else {
       localStorage.removeItem('remember_email')
     }
 
-    // Rediriger vers le dashboard
-    router.push('/dashboard')
+    // 4. Redirection selon le rôle
+    if (user.is_admin) {
+      router.push('/admin/dashboard')
+    } else {
+      router.push('/dashboard')
+    }
 
   } catch (error) {
+    console.error('Erreur:', error.response?.data)
     if (error.response?.data?.errors) {
-      // Erreurs de validation
       const errors = error.response.data.errors
       errorMessage.value = Object.values(errors).flat().join(', ')
     } else if (error.response?.data?.message) {
@@ -168,4 +258,4 @@ const loadRememberedEmail = () => {
 }
 
 loadRememberedEmail()
-</script>
+</script> -->

@@ -1,4 +1,5 @@
 <template>
+
   <section class="relative min-h-screen bg-cover bg-center bg-no-repeat" :style="{ backgroundImage: `url(${backgroundImage})` }">
 
     <!-- Overlay sombre pour que le formulaire soit lisible -->
@@ -116,6 +117,7 @@
       </div>
     </div>
   </section>
+
 </template>
 
 <script setup>

@@ -1,10 +1,22 @@
 <script setup>
 import { RouterView } from 'vue-router'
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+import MainLayout from '@/components/layout/MainLayout.vue'
+
+const route = useRoute()
+
+// Pages qui n'utilisent PAS le layout principal
+const noLayoutRoutes = ['/login', '/register']
+
+const useLayout = computed(() => {
+  return !noLayoutRoutes.includes(route.path)
+})
 </script>
 
 <template>
-  <RouterView />
+  <MainLayout v-if="useLayout">
+    <RouterView />
+  </MainLayout>
+  <RouterView v-else />
 </template>
-
-<style scoped>
-</style>
