@@ -18,4 +18,6 @@ export const authApi ={
     return api.get('/me')
   }
 
+  
+
 }

@@ -7,7 +7,7 @@ import MainLayout from '@/components/layout/MainLayout.vue'
 const route = useRoute()
 
 // Pages qui n'utilisent PAS le layout principal
-const noLayoutRoutes = ['/login', '/register']
+const noLayoutRoutes = ['/login', '/register','/forgot-password','/reset-password']
 
 const useLayout = computed(() => {
   return !noLayoutRoutes.includes(route.path)
