@@ -1,0 +1,179 @@
+import { defineStore } from 'pinia';
+import { ref, computed } from 'vue';
+import { authApi } from '@/services/apiAuth';
+import router from '@/router';
+
+export const useAuthStore = defineStore('auth', () => {
+  // State
+  const user = ref(JSON.parse(localStorage.getItem('user') || 'null'));
+  const token = ref(localStorage.getItem('token') || null);
+  const loading = ref(false);
+  const isLoggingOut = ref(false);
+
+  // Getters
+  const isAuthenticated = computed(() => !!token.value && !!user.value);
+  const userName = computed(() => user.value?.name || '');
+  const isAdmin = computed(() => user.value?.is_admin === true || user.value?.is_admin === 1);
+  const userRole = computed(() => user.value?.role || (user.value?.is_admin ? 'admin' : 'client'));
+
+  // Actions
+  const register = async (userData) => {
+    loading.value = true;
+    
+    try {
+      const response = await authApi.register(userData);
+      
+      if (response.data.token) {
+        const userWithRole = {
+          id: response.data.user.id,
+          name: response.data.user.name,
+          email: response.data.user.email,
+          is_admin: response.data.is_admin,
+          role: response.data.role
+        };
+        
+        token.value = response.data.token;
+        user.value = userWithRole;
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(userWithRole));
+      }
+      
+      return { success: true, data: response.data };
+    } catch (error) {
+      console.error('Erreur inscription:', error);
+      
+      if (error.response?.status === 422) {
+        return { 
+          success: false, 
+          errors: error.response.data.errors,
+          message: 'Veuillez corriger les erreurs'
+        };
+      }
+      
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Erreur lors de l\'inscription'
+      };
+    } finally {
+      loading.value = false;
+    }
+  };
+  
+  const login = async (credentials) => {
+    loading.value = true;
+    
+    try {
+      const response = await authApi.login(credentials);
+      
+      if (response.data.token) {
+        const userWithRole = {
+          id: response.data.user.id,
+          name: response.data.user.name,
+          email: response.data.user.email,
+          is_admin: response.data.is_admin,
+          role: response.data.role
+        };
+        
+        token.value = response.data.token;
+        user.value = userWithRole;
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(userWithRole));
+      }
+      
+      return { success: true, data: response.data };
+      
+    } catch (error) {
+      return { 
+        success: false, 
+        message: error.response?.data?.message || 'Erreur de connexion'
+      };
+    } finally {
+      loading.value = false;
+    }
+  };
+  
+  const logout = async (options = { skipApiCall: false }) => {
+    if (isLoggingOut.value) return;
+    isLoggingOut.value = true;
+    
+    try {
+      if (!options.skipApiCall && token.value) {
+        try {
+          await authApi.logout();
+        } catch (error) {
+          console.log('Logout API error ignored:', error.message);
+        }
+      }
+    } finally {
+      token.value = null;
+      user.value = null;
+      loading.value = false;
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      isLoggingOut.value = false;
+      
+      if (router.currentRoute.value.path !== '/login') {
+        router.push('/login');
+      }
+    }
+  };
+  
+  const fetchUser = async () => {
+    if (!token.value) return;
+    loading.value = true;
+    
+    try {
+      const response = await authApi.getUser();
+      const userWithRole = {
+        id: response.data.id,
+        name: response.data.name,
+        email: response.data.email,
+        is_admin: response.data.is_admin,
+        role: response.data.role
+      };
+      user.value = userWithRole;
+      localStorage.setItem('user', JSON.stringify(userWithRole));
+    } catch (error) {
+      console.error('Erreur récupération user:', error);
+      token.value = null;
+      user.value = null;
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      router.push('/login');
+    } finally {
+      loading.value = false;
+    }
+  };
+  
+  const checkSession = () => {
+    const storedToken = localStorage.getItem('token');
+    if (!storedToken && token.value) {
+      logout({ skipApiCall: true });
+    }
+  };
+  
+  const initAuth = async () => {
+    if (token.value) {
+      if (!user.value) {
+        await fetchUser();
+      }
+    }
+  };
+  
+  initAuth();
+  
+  return {
+    user,
+    token,
+    loading,
+    isAuthenticated,
+    userName,
+    isAdmin,
+    userRole,
+    register,
+    login,
+    logout,
+    fetchUser,
+    checkSession,
+  };
+});
