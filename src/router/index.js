@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LoginVieww from '@/views/auth/LoginVieww.vue'
 import RegisterVieww from '@/views/auth/RegisterVieww.vue'
+import ForgotPassword from '@/views/auth/ForgotPassword.vue'
+import ResetPassword from '@/views/auth/ResetPassword.vue'
 import DashboardUser from '@/views/DashboardUser.vue'
 import DashboardAdmin from '@/views/DashboardAdmin.vue'
 
@@ -32,6 +34,18 @@ const routes = [
     name: 'AdminDashboard',
     component: DashboardAdmin,
     meta: { requiresAuth: true }
+  },
+   {
+    path: '/forgot-password',
+    name: 'ForgotPassword',
+    component: ForgotPassword,
+    meta: { guestOnly: true }
+  },
+  {
+    path: '/reset-password',
+    name: 'ResetPassword',
+    component: ResetPassword,
+    meta: { guestOnly: true }
   },
   {
     path: '/about',

@@ -67,9 +67,9 @@
                   </label>
                 </div>
               </div>
-              <a href="#" class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-500">
-                Forgot password?
-              </a>
+             <router-link to="/forgot-password" class="text-sm font-medium text-blue-600 hover:underline dark:text-blue-500">
+  Mot de passe oublié ?
+</router-link>
             </div>
 
             <!-- Bouton -->
