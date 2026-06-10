@@ -8,11 +8,11 @@ import DashboardUser from '@/views/DashboardUser.vue'
 import DashboardAdmin from '@/views/DashboardAdmin.vue'
 
 const routes = [
-  {
-    path: '/',
-    name: 'home',
-    component: HomeView,
-  },
+  // {
+  //   path: '/',
+  //   name: 'home',
+  //   component: HomeView,
+  // },
   {
     path: '/register',
     name: 'register',
@@ -47,6 +47,12 @@ const routes = [
     component: ResetPassword,
     meta: { guestOnly: true }
   },
+  {
+    path: '/admin/destinations',
+    name: 'Destinations',
+    component: () => import('@/views/admin/DestinationsView.vue'),
+    meta: { requiresAuth: true, role: 'admin' }
+},
   {
     path: '/about',
     name: 'about',

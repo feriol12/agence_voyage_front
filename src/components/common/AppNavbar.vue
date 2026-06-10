@@ -1,5 +1,5 @@
 <template>
-  <nav v-if="authStore.user !== null"  class="bg-[#0F3B5C] shadow-md">
+  <nav v-if="authStore.user !== null" class="bg-[#0F3B5C] shadow-md">
     <div class="px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
 
@@ -86,7 +86,6 @@
     </div>
   </nav>
   <div v-else class="bg-[#0F3B5C] shadow-md h-16">
-    <!-- Squelette de chargement -->
     <div class="px-4 sm:px-6 lg:px-8 h-full flex items-center">
       <div class="text-white">Chargement...</div>
     </div>
@@ -99,26 +98,24 @@ import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuthStore'
 
 const route = useRoute()
-// const router = useRouter()
 const authStore = useAuthStore()
 
-// États locaux
 const dropdownOpen = ref(false)
 const mobileMenuOpen = ref(false)
 const unreadCount = ref(3)
 
-// Computed depuis le store
 const userName = computed(() => authStore.user?.name || 'Invité')
 const userInitials = computed(() => {
   const name = authStore.user?.name || 'U'
   return name.substring(0, 2).toUpperCase()
 })
 
-// Menu selon le rôle (depuis le store)
+// ✅ MENU ADMIN CORRIGÉ AVEC DESTINATIONS
 const menuItems = computed(() => {
   if (authStore.isAdmin) {
     return [
       { name: 'Dashboard', path: '/admin/dashboard' },
+      { name: 'Destinations', path: '/admin/destinations' },   // ← AJOUTÉ
       { name: 'Clients', path: '/admin/clients' },
       { name: 'Voyages', path: '/admin/trips' },
       { name: 'Documents', path: '/admin/documents' },
@@ -126,7 +123,6 @@ const menuItems = computed(() => {
       { name: 'Paramètres', path: '/admin/settings' }
     ]
   }
-  // Menu client
   return [
     { name: 'Mon dossier', path: '/client/dashboard' },
     { name: 'Mes documents', path: '/client/documents' },
@@ -135,7 +131,6 @@ const menuItems = computed(() => {
   ]
 })
 
-// Méthodes
 const toggleDropdown = () => {
   dropdownOpen.value = !dropdownOpen.value
 }
@@ -150,14 +145,12 @@ const handleLogout = async () => {
   }
 }
 
-// Fermer le dropdown quand on clique ailleurs
 const handleClickOutside = (event) => {
   if (dropdownOpen.value && !event.target.closest('.relative')) {
     dropdownOpen.value = false
   }
 }
 
-// Ajouter l'écouteur d'événement
 if (typeof window !== 'undefined') {
   document.addEventListener('click', handleClickOutside)
 }
