@@ -23,6 +23,8 @@
         Se déconnecter
       </button>
     </div>
+
+    
   </div>
 
   <!-- Rediriger si pas d'utilisateur -->
