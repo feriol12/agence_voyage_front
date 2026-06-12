@@ -47,8 +47,8 @@
                 <slot />
               </div>
 
-            
-            
+
+
             </div>
           </Transition>
         </div>

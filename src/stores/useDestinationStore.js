@@ -24,9 +24,9 @@ export const useDestinationStore = defineStore('destination', {
         const currentPerPage = perPage || this.meta.per_page
         const cleanPage = parseInt(page, 10) || 1
         const cleanPerPage = parseInt(currentPerPage, 10) || 9
-        
+
         const response = await apiDestination.getAll(cleanPage, cleanPerPage)
-        
+
         this.destinations = response.data.data || []
         this.meta = {
             total: response.data.meta?.total || 0,
@@ -34,16 +34,16 @@ export const useDestinationStore = defineStore('destination', {
             current_page: response.data.meta?.current_page || cleanPage,
             last_page: response.data.meta?.last_page || 1
         }
-        
+
         console.log('Store meta mis à jour:', this.meta) // Debug
-        
+
     } catch (err) {
         this.error = err.response?.data?.message || 'Erreur lors du chargement'
         console.error(err)
     } finally {
         this.loading = false
     }
-}
+},
 
     async setPerPage(perPage) {
         this.meta.per_page = perPage
@@ -71,11 +71,13 @@ export const useDestinationStore = defineStore('destination', {
       try {
         const response = await apiDestination.create(data)
         await this.fetchDestinations(1)
-        toastStore.success('Destination créée avec succès')
+        // toastStore.success('Destination créée avec succès')
+        toastStore.showToast('success', 'Destination créée avec succès')
         return response.data
       } catch (err) {
         const message = err.response?.data?.message || 'Erreur lors de la création'
-        toastStore.error(message)
+        // toastStore.error(message)
+        toastStore.showToast('error', message)
         throw err
       } finally {
         this.loading = false
@@ -88,11 +90,12 @@ export const useDestinationStore = defineStore('destination', {
       try {
         const response = await apiDestination.update(id, data)
         await this.fetchDestinations(1)
-        toastStore.success('Destination modifiée avec succès')
+        // toastStore.success('Destination modifiée avec succès')
+        toastStore.showToast('success', 'Destination modifiée avec succès')
         return response.data
       } catch (err) {
         const message = err.response?.data?.message || 'Erreur lors de la modification'
-        toastStore.error(message)
+        toastStore.showToast('error', message)
         throw err
       } finally {
         this.loading = false
@@ -105,10 +108,10 @@ export const useDestinationStore = defineStore('destination', {
       try {
         await apiDestination.delete(id)
         await this.fetchDestinations(1)
-        toastStore.success('Destination supprimée avec succès')
+        toastStore.showToast('success', 'Destination supprimée avec succès')
       } catch (err) {
         const message = err.response?.data?.message || 'Erreur lors de la suppression'
-        toastStore.error(message)
+        toastStore.showToast('error', message)
         throw err
       } finally {
         this.loading = false
@@ -122,10 +125,10 @@ export const useDestinationStore = defineStore('destination', {
         // ⭐ Envoyer uniquement is_active
         await apiDestination.update(id, { is_active: isActive })
         await this.fetchDestinations(this.meta.current_page)
-        toastStore.success(`Destination ${isActive ? 'activée' : 'désactivée'} avec succès`)
+        toastStore.showToast('success', `Destination ${isActive ? 'activée' : 'désactivée'} avec succès`)
       } catch (err) {
         const message = err.response?.data?.message || 'Erreur lors du changement de statut'
-        toastStore.error(message)
+        toastStore.showToast('error', message)
         throw err
       } finally {
         this.loading = false
