@@ -3,6 +3,10 @@ import { RouterView } from 'vue-router'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import MainLayout from '@/components/layout/MainLayout.vue'
+import AppToastModal from '@/components/common/AppToastModal.vue'
+import AppConfirmModal from '@/components/common/AppConfirmModal.vue'
+
+
 
 const route = useRoute()
 
@@ -17,6 +21,8 @@ const useLayout = computed(() => {
 <template>
   <MainLayout v-if="useLayout">
     <RouterView />
+    <AppToastModal />
+    <AppConfirmModal />
   </MainLayout>
   <RouterView v-else />
 </template>

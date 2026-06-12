@@ -47,24 +47,8 @@
                 <slot />
               </div>
 
-              <!-- Footer avec boutons d'action -->
-              <div class="flex justify-end gap-3 border-t border-gray-100 px-6 py-4">
-                <button
-                  v-if="showCancelButton"
-                  @click="close"
-                  class="rounded-lg px-4 py-2 text-sm font-medium text-[#64748B] transition-colors hover:bg-gray-100"
-                >
-                  {{ cancelText }}
-                </button>
-                <button
-                  v-if="showConfirmButton"
-                  @click="confirm"
-                  class="rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-                  :class="confirmButtonClass"
-                >
-                  {{ confirmText }}
-                </button>
-              </div>
+            
+            
             </div>
           </Transition>
         </div>
