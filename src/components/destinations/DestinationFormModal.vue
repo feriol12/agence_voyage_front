@@ -24,19 +24,15 @@
         :error="errors.country"
       />
 
-      <!-- Continent (select) -->
-      <AppInput
+      <!-- Continent (select avec AppSelect uniquement) -->
+      <AppSelect
         v-model="form.continent"
         label="Continent"
-        type="select"
+        :options="continentOptions"
         placeholder="Sélectionner un continent"
-      >
-        <option value="Afrique">Afrique</option>
-        <option value="Asie">Asie</option>
-        <option value="Europe">Europe</option>
-        <option value="Amérique">Amérique</option>
-        <option value="Océanie">Océanie</option>
-      </AppInput>
+        :error="errors.continent"
+        hint="Choisissez le continent où se situe la destination"
+      />
 
       <!-- Description -->
       <AppInput
@@ -78,9 +74,7 @@
 
       <!-- Boutons -->
       <div class="flex justify-end gap-3 pt-2">
-        <AppButton variant="outline" @click="close">
-          Annuler
-        </AppButton>
+        <AppButton variant="outline" @click="close"> Annuler </AppButton>
         <AppButton variant="primary" type="submit">
           {{ isEditing ? 'Mettre à jour' : 'Créer' }}
         </AppButton>
@@ -94,17 +88,26 @@ import { ref, computed, watch, reactive } from 'vue'
 import AppModal from '@/components/common/AppModal.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import AppInput from '@/components/common/AppInput.vue'
+import AppSelect from '@/components/common/AppSelect.vue'
 import { useDestinationStore } from '@/stores/useDestinationStore'
 
 const props = defineProps({
   isOpen: Boolean,
-  destination: { type: Object, default: null }
+  destination: { type: Object, default: null },
 })
 
 const emit = defineEmits(['update:isOpen', 'saved'])
 const store = useDestinationStore()
 
 const isEditing = computed(() => !!props.destination)
+
+const continentOptions = [
+  { value: 'Afrique', label: '🌍 Afrique' },
+  { value: 'Asie', label: '🌏 Asie' },
+  { value: 'Europe', label: '🌎 Europe' },
+  { value: 'Amérique', label: '🌎 Amérique' },
+  { value: 'Océanie', label: '🌏 Océanie' },
+]
 
 // Validation simple
 const errors = reactive({})
@@ -116,14 +119,14 @@ const form = ref({
   description: '',
   image_url: '',
   visa_required: false,
-  is_active: true
+  is_active: true,
 })
 
 const validate = () => {
   const newErrors = {}
   if (!form.value.name) newErrors.name = 'Le nom est requis'
   if (!form.value.country) newErrors.country = 'Le pays est requis'
-  
+
   Object.assign(errors, newErrors)
   return Object.keys(newErrors).length === 0
 }
@@ -136,18 +139,22 @@ const resetForm = () => {
     description: '',
     image_url: '',
     visa_required: false,
-    is_active: true
+    is_active: true,
   }
-  Object.keys(errors).forEach(key => delete errors[key])
+  Object.keys(errors).forEach((key) => delete errors[key])
 }
 
-watch(() => props.destination, (newVal) => {
-  if (newVal) {
-    form.value = { ...newVal }
-  } else {
-    resetForm()
-  }
-}, { immediate: true })
+watch(
+  () => props.destination,
+  (newVal) => {
+    if (newVal) {
+      form.value = { ...newVal }
+    } else {
+      resetForm()
+    }
+  },
+  { immediate: true },
+)
 
 const close = () => {
   emit('update:isOpen', false)
@@ -156,7 +163,7 @@ const close = () => {
 
 const handleSubmit = async () => {
   if (!validate()) return
-  
+
   try {
     if (isEditing.value) {
       await store.updateDestination(props.destination.id, form.value)

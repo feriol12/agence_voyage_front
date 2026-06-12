@@ -109,6 +109,8 @@
 import { ref, onMounted } from 'vue'
 import { useTripStore } from '@/stores/useTripStore'
 import { useDestinationStore } from '@/stores/useDestinationStore'
+import { useToastStore } from '@/stores/useToastStore'
+import { useConfirmStore } from '@/stores/useConfirmStore'
 import AppButton from '@/components/common/AppButton.vue'
 import AppCard from '@/components/common/AppCard.vue'
 import AppBadge from '@/components/common/AppBadge.vue'
@@ -116,6 +118,8 @@ import TripFormModal from '@/components/trips/TripFormModal.vue'
 
 const tripStore = useTripStore()
 const destinationStore = useDestinationStore()
+const toastStore = useToastStore()
+const confirmStore = useConfirmStore()
 const isModalOpen = ref(false)
 const selectedTrip = ref(null)
 const destinations = ref([])
@@ -138,15 +142,24 @@ const openEditModal = (trip) => {
   isModalOpen.value = true
 }
 
-const confirmDelete = async (trip) => {
-  if (confirm(`Supprimer le voyage "${trip.title}" ?`)) {
-    const result = await tripStore.deleteTrip(trip.id)
-    if (result.success) {
-      tripStore.fetchTrips()
-    } else {
-      alert(result.message)
+const confirmDelete = (trip) => {
+  confirmStore.showConfirm({
+    title: 'Supprimer le voyage',
+    message: `Voulez-vous vraiment supprimer "${trip.title}" ? Cette action est irréversible.`,
+    confirmText: 'Supprimer',
+    cancelText: 'Annuler',
+    onConfirm: async () => {
+      const result = await tripStore.deleteTrip(trip.id)
+      if (result.success) {
+
+        toastStore.showToast('success', 'Voyage supprimé avec succès')
+        tripStore.fetchTrips()
+      } else {
+          // ❌ Erreur
+   toastStore.showToast('error', 'Erreur lors de la suppression du voyage')
+      }
     }
-  }
+  })
 }
 
 const onSaved = async (tripData) => {
@@ -158,9 +171,18 @@ const onSaved = async (tripData) => {
   }
 
   if (result.success) {
+    // ✅ Message différent selon création ou modification
+    const successMessage = tripData.id
+      ? 'Voyage modifié avec succès'
+      : 'Voyage créé avec succès'
+
+    toastStore.showToast('success', successMessage)
+
     tripStore.fetchTrips()
   } else {
-    alert(result.message)
+
+     // ❌ Erreur
+   toastStore.showToast('error', 'Une erreur est survenue')
   }
 }
 
