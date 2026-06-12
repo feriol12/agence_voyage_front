@@ -48,7 +48,7 @@
               </div>
 
               <!-- Footer avec boutons d'action -->
-              <div class="flex justify-end gap-3 border-t border-gray-100 px-6 py-4">
+              <!-- <div class="flex justify-end gap-3 border-t border-gray-100 px-6 py-4">
                 <button
                   v-if="showCancelButton"
                   @click="close"
@@ -64,7 +64,7 @@
                 >
                   {{ confirmText }}
                 </button>
-              </div>
+              </div> -->
             </div>
           </Transition>
         </div>

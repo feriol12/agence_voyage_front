@@ -31,7 +31,7 @@
         <div class="flex justify-between items-start">
           <div>
             <h3 class="font-semibold text-lg text-[#1E293B]">{{ trip.title }}</h3>
-            <p class="text-sm text-[#64748B]">Destination ID: {{ trip.destination_id }}</p>
+            <p class="text-sm text-[#64748B]">Destination ID: {{ trip.destination_id}} ||{{ trip.destination.name }}</p>
             <p class="text-xs text-[#94A3B8] mt-1">Réf: {{ trip.reference }}</p>
           </div>
           <div class="flex gap-2">
