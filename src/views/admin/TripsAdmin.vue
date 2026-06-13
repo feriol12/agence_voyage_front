@@ -47,6 +47,13 @@
             >
               🗑️
             </button>
+            <button
+              @click="openDateModal(trip)"
+              class="text-[#64748B] hover:text-[#0F3B5C] transition-colors"
+              title="Gérer les dates"
+            >
+            📅
+          </button>
           </div>
         </div>
 
@@ -103,6 +110,13 @@
       @saved="onSaved"
     />
   </div>
+
+  <!-- Modale des dates -->
+<TripDateModal
+  v-model:isOpen="isDateModalOpen"
+  :trip="selectedTripForDates"
+  @saved="onDateSaved"
+/>
 </template>
 
 <script setup>
@@ -115,7 +129,7 @@ import AppButton from '@/components/common/AppButton.vue'
 import AppCard from '@/components/common/AppCard.vue'
 import AppBadge from '@/components/common/AppBadge.vue'
 import TripFormModal from '@/components/trips/TripFormModal.vue'
-
+import TripDateModal from '@/components/trips/TripDateModal.vue'
 const tripStore = useTripStore()
 const destinationStore = useDestinationStore()
 const toastStore = useToastStore()
@@ -123,6 +137,9 @@ const confirmStore = useConfirmStore()
 const isModalOpen = ref(false)
 const selectedTrip = ref(null)
 const destinations = ref([])
+
+const isDateModalOpen = ref(false)
+const selectedTripForDates = ref(null)
 
 onMounted(async () => {
   await Promise.all([
@@ -132,6 +149,18 @@ onMounted(async () => {
   destinations.value = destinationStore.destinations
 })
 
+
+
+
+const openDateModal = (trip) => {
+  selectedTripForDates.value = trip
+  isDateModalOpen.value = true
+}
+
+const onDateSaved = () => {
+  // Rafraîchir la liste des voyages si besoin
+  // tripStore.fetchTrips()
+}
 const openCreateModal = () => {
   selectedTrip.value = null
   isModalOpen.value = true
