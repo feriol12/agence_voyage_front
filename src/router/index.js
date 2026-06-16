@@ -7,6 +7,7 @@ import ResetPassword from '@/views/auth/ResetPassword.vue'
 import DashboardUser from '@/views/DashboardUser.vue'
 import DashboardAdmin from '@/views/DashboardAdmin.vue'
 
+
 const routes = [
   // {
   //   path: '/',
@@ -57,6 +58,12 @@ const routes = [
   path: '/admin/trips',
   name: 'TripsAdmin',
   component: () => import('@/views/admin/TripsAdmin.vue'),
+  meta: { requiresAuth: true,   role: 'admin' }
+},
+{
+  path: '/admin/clients',
+  name: 'ClientTripsAdmin',
+  component: () => import('@/views/admin/ClientTripsAdmin.vue'),
   meta: { requiresAuth: true,   role: 'admin' }
 },
   {
