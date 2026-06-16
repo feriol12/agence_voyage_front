@@ -1,5 +1,5 @@
 <template>
-  <nav v-if="authStore.user !== null" class="bg-[#0F3B5C] shadow-md">
+  <nav v-if="authStore.user !== null" class="bg-[#0F3B5C] shadow-md fixed top-0 left-0 w-full z-50">
     <div class="px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between items-center h-16">
 

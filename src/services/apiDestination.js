@@ -1,12 +1,13 @@
 import api from './api'
 
 export const apiDestination = {
-  // Récupérer toutes les destinations (paginées)
-  getAll: (page = 1, perPage = 9) => {
-    // Nettoie les paramètres pour éviter les doublons
-    const cleanPage = parseInt(page, 10) || 1
-    const cleanPerPage = parseInt(perPage, 10) || 9
-    return api.get(`/admin/destinations?page=${cleanPage}&per_page=${cleanPerPage}`)
+  // Récupérer toutes les destinations (paginées) avec recherche
+  getAll: (page = 1, perPage = 9, search = '', continent = '', isActive = '') => {
+    let url = `/admin/destinations?page=${page}&per_page=${perPage}`
+    if (search) url += `&search=${encodeURIComponent(search)}`
+    if (continent) url += `&continent=${continent}`
+    if (isActive !== '') url += `&is_active=${isActive}`
+    return api.get(url)
   },
   // Récupérer une destination par son ID
   getById: (id) => api.get(`/admin/destinations/${id}`),
