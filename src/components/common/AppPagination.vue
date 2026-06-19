@@ -34,7 +34,7 @@
          Précédent
       </button>
       
-      <button
+     <button
         @click="goToNext"
         :disabled="currentPage === lastPage"
         class="rounded border px-3 py-1 text-sm transition-all disabled:opacity-40"
@@ -43,7 +43,7 @@
           : 'border-gray-300 bg-white text-[#1E293B] hover:border-[#E67E22] hover:text-[#E67E22]'"
       >
         Suivant 
-      </button>
+      </button> 
     </div>
   </div>
 </template>

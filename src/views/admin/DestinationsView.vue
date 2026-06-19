@@ -36,6 +36,22 @@
     <!-- Liste des destinations -->
     <div class="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
       <AppCard v-for="dest in store.destinations" :key="dest.id" class="overflow-hidden">
+        <!-- Image en haut -->
+        <div class="relative w-full h-44 bg-gray-100 overflow-hidden">
+          <img
+            v-if="dest.image_url"
+            :src="dest.image_url"
+            :alt="dest.name"
+            class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+          />
+          <div
+            v-else
+            class="w-full h-full flex flex-col items-center justify-center text-[#94A3B8]"
+          >
+            <PhotoIcon class="h-12 w-12" />
+            <span class="mt-1 text-xs font-medium">Aucune image</span>
+          </div>
+        </div>
         <div class="flex items-start justify-between gap-1">
           <h3 class="font-semibold text-sm sm:text-base text-[#1E293B] truncate">
             {{ dest.name }}
@@ -121,7 +137,8 @@ import AppSwitch from '@/components/common/AppSwitch.vue'
 import AppPagination from '@/components/common/AppPagination.vue'
 import DestinationFormModal from '@/components/destinations/DestinationFormModal.vue'
 import SearchBar from '@/components/common/SearchBar.vue'
-import { PencilSquareIcon, TrashIcon } from '@heroicons/vue/24/outline'
+// import { PencilSquareIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import { PhotoIcon, PencilSquareIcon, TrashIcon } from '@heroicons/vue/24/outline'
 
 const store = useDestinationStore()
 const confirmStore = useConfirmStore()
