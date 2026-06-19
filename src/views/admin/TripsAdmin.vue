@@ -7,6 +7,20 @@
       </AppButton>
     </div>
 
+
+      <!-- 🔥 FILTRES TRIPS -->
+   <!-- 🔥 FILTRES TRIPS -->
+<TripFilters
+  v-model:search-query="searchQuery"
+  v-model:active-status="activeStatus"
+  v-model:active-status-filter="activeStatusFilter"
+  :loading="tripStore.loading"
+  @search="onSearch"
+  @filterStatus="onFilterStatus"
+  @filterActive="onFilterActive"
+/>
+
+
     <!-- État chargement -->
     <div v-if="tripStore.loading" class="text-center py-8 text-gray-500">
       Chargement...
@@ -87,20 +101,22 @@
       </AppCard>
     </div>
 
-    <!-- Pagination -->
-    <div v-if="tripStore.meta && tripStore.meta.last_page > 1" class="mt-6 flex justify-center gap-2">
-      <button
-        v-for="page in tripStore.meta.last_page"
-        :key="page"
-        @click="tripStore.fetchTrips(page)"
-        class="px-3 py-1 rounded-lg border transition-colors"
-        :class="page === tripStore.meta.current_page
-          ? 'bg-[#0F3B5C] text-white border-[#0F3B5C]'
-          : 'bg-white text-[#1E293B] border-[#CBD5E1] hover:bg-gray-50'"
-      >
-        {{ page }}
-      </button>
-    </div>
+
+
+
+   
+   <!-- Pagination -->
+<AppPagination
+  v-if="tripStore.meta && tripStore.meta.last_page > 1"
+  :current-page="tripStore.meta.current_page"
+  :last-page="tripStore.meta.last_page"
+  :per-page="perPage"
+  @page-changed="onPageChanged"
+  @update:per-page="onPerPageChanged"
+/>
+
+
+
 
     <!-- Modale -->
     <TripFormModal
@@ -130,28 +146,111 @@ import AppCard from '@/components/common/AppCard.vue'
 import AppBadge from '@/components/common/AppBadge.vue'
 import TripFormModal from '@/components/trips/TripFormModal.vue'
 import TripDateModal from '@/components/trips/TripDateModal.vue'
+import TripFilters from '@/components/trips/TripFilters.vue'
+import AppPagination from '@/components/common/AppPagination.vue'
+
 const tripStore = useTripStore()
 const destinationStore = useDestinationStore()
 const toastStore = useToastStore()
 const confirmStore = useConfirmStore()
+
+// États des modales
 const isModalOpen = ref(false)
 const selectedTrip = ref(null)
 const destinations = ref([])
-
 const isDateModalOpen = ref(false)
 const selectedTripForDates = ref(null)
 
+// 🔥 État pour le nombre d'éléments par page
+const perPage = ref(3)
+
+// 🔥 États des filtres
+const searchQuery = ref('')
+const activeStatus = ref('')
+const activeStatusFilter = ref('')
+
+// 🔥 Appliquer les filtres
+const applyFilters = () => {
+
+   console.log('🔵 applyFilters - searchQuery:', searchQuery.value)
+  console.log('🔵 applyFilters - activeStatus:', activeStatus.value)
+  console.log('🔵 applyFilters - activeStatusFilter:', activeStatusFilter.value)
+
+  tripStore.fetchTrips({
+    page: 1,
+    search: searchQuery.value,
+    status: activeStatus.value,
+    is_active: activeStatusFilter.value
+  })
+}
+// 🔥 Méthodes pour chaque filtre
+const onSearch = (value) => {
+  console.log('🔵 onSearch:', value)
+  searchQuery.value = value
+  applyFilters()
+}
+
+const onFilterStatus = (value) => {
+  console.log('🔵 onFilterStatus:', value)
+  activeStatus.value = value
+  applyFilters()
+}
+
+const onFilterActive = (value) => {
+  console.log('🔵 onFilterActive:', value)
+  activeStatusFilter.value = value
+  applyFilters()
+}
+
+
+// 🔥 Pagination avec filtres
+const goToPage = (page) => {
+  tripStore.fetchTrips({
+    page: page,
+    search: searchQuery.value,
+    status: activeStatus.value,
+    is_active: activeStatusFilter.value
+  })
+}
+
+
+// 🔥 Changement de page
+const onPageChanged = (page, perPageValue) => {
+  console.log('🔵 onPageChanged:', { page, perPage: perPageValue })
+
+  // Mettre à jour perPage si nécessaire
+  if (perPageValue !== perPage.value) {
+    perPage.value = perPageValue
+  }
+
+  tripStore.fetchTrips({
+    page: page,
+    per_page: perPageValue,
+    search: searchQuery.value,
+    status: activeStatus.value,
+    is_active: activeStatusFilter.value
+  })
+}
+
+// 🔥 Changement du nombre d'éléments par page
+const onPerPageChanged = (newPerPage) => {
+  console.log('🔵 onPerPageChanged:', newPerPage)
+  perPage.value = newPerPage
+  // La pagination sera mise à jour automatiquement via @page-changed
+}
+// 🔥 UN SEUL onMounted (fusionner les deux)
 onMounted(async () => {
   await Promise.all([
-    tripStore.fetchTrips(),
+    tripStore.fetchTrips({
+      page: 1,
+      per_page: perPage.value
+    }),
     destinationStore.fetchDestinations()
   ])
   destinations.value = destinationStore.destinations
 })
 
-
-
-
+// Modales
 const openDateModal = (trip) => {
   selectedTripForDates.value = trip
   isDateModalOpen.value = true
@@ -159,8 +258,9 @@ const openDateModal = (trip) => {
 
 const onDateSaved = () => {
   // Rafraîchir la liste des voyages si besoin
-  // tripStore.fetchTrips()
+  // applyFilters()
 }
+
 const openCreateModal = () => {
   selectedTrip.value = null
   isModalOpen.value = true
@@ -180,12 +280,10 @@ const confirmDelete = (trip) => {
     onConfirm: async () => {
       const result = await tripStore.deleteTrip(trip.id)
       if (result.success) {
-
         toastStore.showToast('success', 'Voyage supprimé avec succès')
-        tripStore.fetchTrips()
+        applyFilters()  // ← utilise applyFilters au lieu de fetchTrips()
       } else {
-          // ❌ Erreur
-   toastStore.showToast('error', 'Erreur lors de la suppression du voyage')
+        toastStore.showToast('error', 'Erreur lors de la suppression du voyage')
       }
     }
   })
@@ -200,18 +298,11 @@ const onSaved = async (tripData) => {
   }
 
   if (result.success) {
-    // ✅ Message différent selon création ou modification
-    const successMessage = tripData.id
-      ? 'Voyage modifié avec succès'
-      : 'Voyage créé avec succès'
-
+    const successMessage = tripData.id ? 'Voyage modifié avec succès' : 'Voyage créé avec succès'
     toastStore.showToast('success', successMessage)
-
-    tripStore.fetchTrips()
+    applyFilters()  // ← utilise applyFilters au lieu de fetchTrips()
   } else {
-
-     // ❌ Erreur
-   toastStore.showToast('error', 'Une erreur est survenue')
+    toastStore.showToast('error', 'Une erreur est survenue')
   }
 }
 
@@ -237,3 +328,6 @@ const statusLabel = (status) => {
   return labels[status] || status
 }
 </script>
+
+
+

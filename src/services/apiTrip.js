@@ -3,7 +3,11 @@ import api from './api'
 export const tripApi = {
   // Récupérer tous les trips
   getAll(params) {
+
+    console.log('🔵 getAll appelé avec params:', params)
+     console.log('🔵 URL complète:', `/admin/trips`) 
     return api.get('/admin/trips', { params })
+
   },
 
   // Récupérer un trip par ID

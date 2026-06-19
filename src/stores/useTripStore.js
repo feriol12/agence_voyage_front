@@ -10,27 +10,36 @@ export const useTripStore = defineStore('trip', () => {
   const meta = ref(null)
 
   // Actions
-  const fetchTrips = async (page = 1) => {
+  const fetchTrips = async (params = {}) => {
     loading.value = true
     error.value = null
 
     try {
-      const response = await tripApi.getAll({ page })
+      const response = await tripApi.getAll(params)
+
+      console.log('🔵 fetchTrips params reçus:', params)
+    //    console.log('🟢 Réponse complète:', response)
+    // console.log('🟢 response.data:', response.data)
 
       // ✅ Les données sont dans response.data.data.data (attention à la structure)
       // Ta réponse a: { data: { data: [...], current_page: 1, ... } }
       const responseData = response.data.data
+    //    console.log('🟢 responseData:', responseData)
+    // console.log('🟢 responseData.data:', responseData?.data)  // ← AJOUTE CE LOG
+    // console.log('🟢 typeof responseData:', typeof responseData)
 
-      trips.value = responseData.data || []
+      trips.value = responseData || []
+
+      // console.log('🟢 trips.value après assignation:', trips.value)
 
       // ✅ Les infos de pagination sont dans responseData directement
       meta.value = {
-        current_page: responseData.current_page,
-        last_page: responseData.last_page,
-        per_page: responseData.per_page,
-        total: responseData.total,
-        from: responseData.from,
-        to: responseData.to
+        current_page: response.data.current_page,
+        last_page: response.data.last_page,
+        per_page: response.data.per_page,
+        total: response.data.total,
+        from: response.data.from,
+        to: response.data.to
       }
 
       console.log('Trips chargés:', trips.value.length)

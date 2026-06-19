@@ -9,7 +9,7 @@ const normalizeMeta = (meta, defaults) => {
         if (Array.isArray(value)) return value.length > 0 ? Number(value[0]) : fallback
         return Number(value)
     }
-    
+
     return {
         total: extract(meta.total, defaults.total),
         per_page: extract(meta.per_page, defaults.per_page),
