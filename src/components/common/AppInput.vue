@@ -11,8 +11,23 @@
       <span v-if="required" class="text-[#E74C3C] ml-0.5">*</span>
     </label>
 
+    <!-- Input File -->
+    <input
+      v-if="type === 'file'"
+      :id="id"
+      type="file"
+      :accept="accept"
+      :multiple="multiple"
+      :required="required"
+      :disabled="disabled"
+      :class="inputClass"
+      @change="handleFileChange"
+      @blur="handleBlur"
+    />
+
     <!-- Input / Textarea / Select -->
     <component 
+      v-else
       :is="tag"
       :id="id"
       :type="type"
@@ -45,88 +60,43 @@
 import { computed, useId } from 'vue'
 
 const props = defineProps({
-  // Valeur du champ
   modelValue: {
-    type: [String, Number, Boolean],
+    type: [String, Number, Boolean, File, FileList],
     default: ''
   },
-  
-  // Label
-  label: {
-    type: String,
-    default: ''
-  },
-  
-  // Type de champ (text, email, password, number, tel, url, textarea, select, checkbox, radio)
-  type: {
-    type: String,
-    default: 'text'
-  },
-  
-  // Placeholder
-  placeholder: {
-    type: String,
-    default: ''
-  },
-  
-  // Message d'erreur
-  error: {
-    type: String,
-    default: ''
-  },
-  
-  // Message d'aide
-  hint: {
-    type: String,
-    default: ''
-  },
-  
-  // Rendu requis
-  required: {
-    type: Boolean,
-    default: false
-  },
-  
-  // Désactivé
-  disabled: {
-    type: Boolean,
-    default: false
-  },
-  
-  // Variation de taille (sm, md, lg)
+  label: { type: String, default: '' },
+  type: { type: String, default: 'text' },
+  placeholder: { type: String, default: '' },
+  error: { type: String, default: '' },
+  hint: { type: String, default: '' },
+  required: { type: Boolean, default: false },
+  disabled: { type: Boolean, default: false },
   size: {
     type: String,
     default: 'md',
     validator: (value) => ['sm', 'md', 'lg'].includes(value)
   },
-  
-  // Variation de style (default, filled, flushed)
   variant: {
     type: String,
     default: 'default',
     validator: (value) => ['default', 'filled', 'flushed'].includes(value)
   },
-  
-  // Pour textarea : nombre de lignes
-  rows: {
-    type: Number,
-    default: 3
-  }
+  rows: { type: Number, default: 3 },
+  // Props pour les fichiers
+  accept: { type: String, default: '*/*' },
+  multiple: { type: Boolean, default: false }
 })
 
-const emit = defineEmits(['update:modelValue', 'blur'])
+const emit = defineEmits(['update:modelValue', 'blur', 'fileChange'])
 
-// ID unique pour l'accessibilité
 const id = useId()
 
-// Détermine le tag HTML à utiliser
 const tag = computed(() => {
   if (props.type === 'textarea') return 'textarea'
   if (props.type === 'select') return 'select'
   return 'input'
 })
 
-// Classes du label
 const labelClass = computed(() => {
   const classes = {
     default: 'text-[#1E293B]',
@@ -136,26 +106,21 @@ const labelClass = computed(() => {
   return classes[props.variant]
 })
 
-// Classes de l'input
 const inputClass = computed(() => {
-  // Taille
   const sizes = {
     sm: 'px-2 py-1.5 text-sm',
     md: 'px-3 py-2 text-sm',
     lg: 'px-4 py-2.5 text-base'
   }
 
-  // Style de base
   const baseClasses = 'w-full rounded-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-0 disabled:bg-gray-100 disabled:cursor-not-allowed'
   
-  // Variant
   const variants = {
     default: 'border border-[#CBD5E1] bg-white focus:border-[#E67E22] focus:ring-[#E67E22]/20',
     filled: 'border-0 bg-[#F1F5F9] focus:bg-white focus:ring-2 focus:ring-[#E67E22]',
     flushed: 'border-0 border-b border-[#CBD5E1] rounded-none bg-transparent focus:border-[#E67E22] focus:ring-0'
   }
 
-  // État erreur
   const errorClass = props.error 
     ? 'border-[#E74C3C] focus:border-[#E74C3C] focus:ring-[#E74C3C]/20' 
     : ''
@@ -163,7 +128,6 @@ const inputClass = computed(() => {
   return `${baseClasses} ${sizes[props.size]} ${variants[props.variant]} ${errorClass}`
 })
 
-// Gestion des événements
 const handleInput = (event) => {
   emit('update:modelValue', event.target.value)
 }
@@ -171,21 +135,24 @@ const handleInput = (event) => {
 const handleBlur = (event) => {
   emit('blur', event)
 }
+
+const handleFileChange = (event) => {
+  const files = event.target.files
+  if (props.multiple) {
+    emit('update:modelValue', files)
+    emit('fileChange', files)
+  } else {
+    const file = files[0] || null
+    emit('update:modelValue', file)
+    emit('fileChange', file)
+  }
+}
 </script>
 
 <style scoped>
 @keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-
-.animate-fadeIn {
-  animation: fadeIn 0.2s ease-out;
-}
+.animate-fadeIn { animation: fadeIn 0.2s ease-out; }
 </style>

@@ -1,7 +1,6 @@
 import api from './api'
 
 export const apiDestination = {
-  // Récupérer toutes les destinations (paginées) avec recherche
   getAll: (page = 1, perPage = 9, search = '', continent = '', isActive = '') => {
     let url = `/admin/destinations?page=${page}&per_page=${perPage}`
     if (search) url += `&search=${encodeURIComponent(search)}`
@@ -9,15 +8,43 @@ export const apiDestination = {
     if (isActive !== '') url += `&is_active=${isActive}`
     return api.get(url)
   },
-  // Récupérer une destination par son ID
+
   getById: (id) => api.get(`/admin/destinations/${id}`),
 
-  // Créer une nouvelle destination
-  create: (data) => api.post('/admin/destinations', data),
+  // ✅ MODIFIÉ : utiliser FormData pour l'upload
+  create: (data) => {
+    const formData = new FormData()
+    Object.keys(data).forEach((key) => {
+      if (data[key] !== undefined && data[key] !== null && data[key] !== '') {
+        // ✅ Convertir les booléens en string '0' ou '1'
+        if (typeof data[key] === 'boolean') {
+          formData.append(key, data[key] ? '1' : '0')
+        } else {
+          formData.append(key, data[key])
+        }
+      }
+    })
+    return api.post('/admin/destinations', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
+  update: (id, data) => {
+    const formData = new FormData()
+    Object.keys(data).forEach((key) => {
+      if (data[key] !== undefined && data[key] !== null && data[key] !== '') {
+        // ✅ Convertir les booléens en string '0' ou '1'
+        if (typeof data[key] === 'boolean') {
+          formData.append(key, data[key] ? '1' : '0')
+        } else {
+          formData.append(key, data[key])
+        }
+      }
+    })
+    formData.append('_method', 'PUT')
+    return api.post(`/admin/destinations/${id}`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+  },
 
-  // Mettre à jour une destination
-  update: (id, data) => api.post(`/admin/destinations/${id}`, { ...data, _method: 'PUT' }),
-
-  // Supprimer une destination
   delete: (id) => api.delete(`/admin/destinations/${id}`),
 }

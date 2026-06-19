@@ -43,14 +43,29 @@
         :rows="3"
       />
 
-      <!-- URL de l'image -->
+      <!-- Image -->
       <AppInput
-        v-model="form.image_url"
-        label="URL de l'image"
-        type="url"
-        placeholder="https://..."
-        hint="Format recommandé : JPG ou PNG, 1200x800px"
+        v-model="imageFile"
+        label="Image de la destination"
+        type="file"
+        accept="image/*"
+        hint="Formats acceptés : JPG, PNG, GIF (max 2 Mo)"
+        @fileChange="handleImageChange"
       />
+
+      <!-- Aperçu -->
+      <div v-if="imagePreview" class="mt-2">
+        <img
+          :src="imagePreview"
+          class="h-20 w-20 object-cover rounded-lg border border-[#E2E8F0]"
+        />
+      </div>
+      <div v-else-if="form.image_url" class="mt-2">
+        <img
+          :src="form.image_url"
+          class="h-20 w-20 object-cover rounded-lg border border-[#E2E8F0]"
+        />
+      </div>
 
       <!-- Visa requis (checkbox) -->
       <label class="flex items-center gap-2 cursor-pointer">
@@ -109,8 +124,11 @@ const continentOptions = [
   { value: 'Océanie', label: '🌏 Océanie' },
 ]
 
-// Validation simple
 const errors = reactive({})
+
+// ✅ AJOUT : variables pour l'image
+const imageFile = ref(null)
+const imagePreview = ref('')
 
 const form = ref({
   name: '',
@@ -126,9 +144,16 @@ const validate = () => {
   const newErrors = {}
   if (!form.value.name) newErrors.name = 'Le nom est requis'
   if (!form.value.country) newErrors.country = 'Le pays est requis'
-
   Object.assign(errors, newErrors)
   return Object.keys(newErrors).length === 0
+}
+
+// ✅ AJOUT : gestion de l'image
+const handleImageChange = (file) => {
+  if (file) {
+    imageFile.value = file
+    imagePreview.value = URL.createObjectURL(file)
+  }
 }
 
 const resetForm = () => {
@@ -141,6 +166,8 @@ const resetForm = () => {
     visa_required: false,
     is_active: true,
   }
+  imageFile.value = null
+  imagePreview.value = ''
   Object.keys(errors).forEach((key) => delete errors[key])
 }
 
@@ -149,6 +176,9 @@ watch(
   (newVal) => {
     if (newVal) {
       form.value = { ...newVal }
+      if (newVal.image_url) {
+        imagePreview.value = newVal.image_url
+      }
     } else {
       resetForm()
     }
@@ -165,10 +195,26 @@ const handleSubmit = async () => {
   if (!validate()) return
 
   try {
+    // ✅ Forcer les booléens
+    const payload = {
+      name: form.value.name,
+      country: form.value.country,
+      continent: form.value.continent || null,
+      description: form.value.description || null,
+      visa_required: Boolean(form.value.visa_required), // ← FORCE
+      is_active: Boolean(form.value.is_active),         // ← FORCE
+    }
+
+    if (imageFile.value) {
+      payload.image = imageFile.value
+    }
+
+    console.log('📦 Payload nettoyé:', payload)
+
     if (isEditing.value) {
-      await store.updateDestination(props.destination.id, form.value)
+      await store.updateDestination(props.destination.id, payload)
     } else {
-      await store.createDestination(form.value)
+      await store.createDestination(payload)
     }
     emit('saved')
     close()

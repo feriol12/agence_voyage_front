@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { apiDestination } from '@/services/apiDestination'
 import { useToastStore } from './useToastStore'
 
-// Normaliseur pour les métadonnées de pagination (gère les tableaux retournés par l'API)
+// ✅ Normaliseur pour les métadonnées (corrige les tableaux)
 const normalizeMeta = (meta, defaults) => {
     const extract = (value, fallback) => {
         if (value === undefined || value === null) return fallback
@@ -54,7 +54,7 @@ export const useDestinationStore = defineStore('destination', {
 
                 this.destinations = response.data.data || []
 
-                // Normalisation des métadonnées (corrige les tableaux)
+                // ✅ Normalisation des métadonnées (corrige les tableaux)
                 this.meta = normalizeMeta(response.data.meta || {}, {
                     total: 0,
                     per_page: cleanPerPage,
@@ -128,11 +128,11 @@ export const useDestinationStore = defineStore('destination', {
             try {
                 const response = await apiDestination.create(data)
                 await this.fetchDestinations(1)
-                toastStore.success('Destination créée avec succès')
+                toastStore.showToast('Destination créée avec succès')
                 return response.data
             } catch (err) {
                 const message = err.response?.data?.message || 'Erreur lors de la création'
-                toastStore.error(message)
+                toastStore.showToast('error', message)
                 throw err
             } finally {
                 this.loading = false
@@ -145,11 +145,11 @@ export const useDestinationStore = defineStore('destination', {
             try {
                 const response = await apiDestination.update(id, data)
                 await this.fetchDestinations(this.meta.current_page)
-                toastStore.success('Destination modifiée avec succès')
+                toastStore.showToast('Destination modifiée avec succès')
                 return response.data
             } catch (err) {
                 const message = err.response?.data?.message || 'Erreur lors de la modification'
-                toastStore.error(message)
+                toastStore.showToast('error', message)
                 throw err
             } finally {
                 this.loading = false
@@ -162,10 +162,10 @@ export const useDestinationStore = defineStore('destination', {
             try {
                 await apiDestination.delete(id)
                 await this.fetchDestinations(this.meta.current_page)
-                toastStore.success('Destination supprimée avec succès')
+                toastStore.showToast('Destination supprimée avec succès')
             } catch (err) {
                 const message = err.response?.data?.message || 'Erreur lors de la suppression'
-                toastStore.error(message)
+                toastStore.showToast('error', message)
                 throw err
             } finally {
                 this.loading = false
@@ -179,10 +179,10 @@ export const useDestinationStore = defineStore('destination', {
                 await apiDestination.update(id, { is_active: isActive })
                 const currentPage = this.meta?.current_page || 1
                 await this.fetchDestinations(currentPage)
-                toastStore.success(`Destination ${isActive ? 'activée' : 'désactivée'} avec succès`)
+                toastStore.showToast(`Destination ${isActive ? 'activée' : 'désactivée'} avec succès`)
             } catch (err) {
                 const message = err.response?.data?.message || 'Erreur lors du changement de statut'
-                toastStore.error(message)
+                toastStore.showToast('error', message)
                 throw err
             } finally {
                 this.loading = false
