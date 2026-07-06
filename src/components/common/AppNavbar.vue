@@ -12,15 +12,39 @@
 
         <!-- Menu desktop (caché sur mobile) -->
         <div class="hidden md:flex items-center space-x-2">
-          <router-link
-            v-for="item in menuItems"
-            :key="item.path"
-            :to="item.path"
-            class="text-gray-200 hover:bg-[#E67E22] hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200"
-            :class="{ 'bg-[#E67E22] text-white': isActive(item.path) }"
-          >
-            {{ item.name }}
-          </router-link>
+          <template v-for="item in menuItems" :key="item.path">
+            <!-- Élément avec sous-menu -->
+            <div v-if="item.children" class="relative group">
+              <button
+                class="text-gray-200 hover:bg-[#E67E22] hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center gap-1"
+                :class="{ 'bg-[#E67E22] text-white': isActive(item.path) }"
+              >
+                {{ item.name }}
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <!-- Sous-menu -->
+              <div class="absolute left-0 mt-1 w-56 bg-white rounded-lg shadow-lg py-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 border border-gray-100">
+                <router-link
+                  v-for="child in item.children"
+                  :key="child.path"
+                  :to="child.path"
+                  class="flex items-center justify-between px-4 py-2 text-sm text-gray-700 hover:bg-[#E67E22] hover:text-white transition-colors"
+                >
+                  <span>{{ child.name }}</span>
+                  <span v-if="child.badge" class="bg-[#E74C3C] text-white text-xs rounded-full px-2 py-0.5">
+                    {{ child.badge }}
+                  </span>
+                </router-link>
+              </div>
+            </div>
+
+            <!-- Élément simple -->
+            <router-link v-else :to="item.path" class="text-gray-200 hover:bg-[#E67E22] hover:text-white px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200" :class="{ 'bg-[#E67E22] text-white': isActive(item.path) }">
+              {{ item.name }}
+            </router-link>
+          </template>
         </div>
 
         <!-- Droite : notifications + utilisateur -->
@@ -50,7 +74,12 @@
 
             <!-- Dropdown menu -->
             <div v-if="dropdownOpen" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
-              <router-link to="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">👤 Mon profil</router-link>
+              <router-link to="/profile" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                👤 Mon profil
+              </router-link>
+              <router-link to="/admin/settings" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                ⚙️ Paramètres
+              </router-link>
               <div class="border-t border-gray-100 my-1"></div>
               <button @click="handleLogout" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
                 🚪 Déconnexion
@@ -73,15 +102,32 @@
     <!-- Menu mobile (affiché quand ouvert) -->
     <div v-if="mobileMenuOpen" class="md:hidden bg-[#0F3B5C] border-t border-[#1E4A6E] py-2">
       <div class="px-2 space-y-1">
-        <router-link
-          v-for="item in menuItems"
-          :key="item.path"
-          :to="item.path"
-          class="block text-gray-200 hover:bg-[#E67E22] hover:text-white px-3 py-2 rounded-md text-base font-medium"
-          @click="mobileMenuOpen = false"
-        >
-          {{ item.name }}
-        </router-link>
+        <template v-for="item in menuItems" :key="item.path">
+          <router-link
+            v-if="!item.children"
+            :to="item.path"
+            class="block text-gray-200 hover:bg-[#E67E22] hover:text-white px-3 py-2 rounded-md text-base font-medium"
+            @click="mobileMenuOpen = false"
+          >
+            {{ item.name }}
+          </router-link>
+          <div v-else>
+            <div class="text-gray-200 px-3 py-2 text-base font-medium">
+              {{ item.name }}
+            </div>
+            <div class="pl-4 space-y-1">
+              <router-link
+                v-for="child in item.children"
+                :key="child.path"
+                :to="child.path"
+                class="block text-gray-300 hover:bg-[#E67E22] hover:text-white px-3 py-2 rounded-md text-sm"
+                @click="mobileMenuOpen = false"
+              >
+                {{ child.name }}
+              </router-link>
+            </div>
+          </div>
+        </template>
       </div>
     </div>
   </nav>
@@ -94,7 +140,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/useAuthStore'
 
 const route = useRoute()
@@ -110,17 +156,23 @@ const userInitials = computed(() => {
   return name.substring(0, 2).toUpperCase()
 })
 
-// ✅ MENU ADMIN CORRIGÉ AVEC DESTINATIONS
+// ✅ Menu avec sous-menu Documents
 const menuItems = computed(() => {
   if (authStore.isAdmin) {
     return [
       { name: 'Dashboard', path: '/admin/dashboard' },
-      { name: 'Destinations', path: '/admin/destinations' },   // ← AJOUTÉ
+      { name: 'Destinations', path: '/admin/destinations' },
       { name: 'Clients', path: '/admin/clients' },
       { name: 'Voyages', path: '/admin/trips' },
-      { name: 'Documents', path: '/admin/documents' },
-      { name: 'Paiements', path: '/admin/payments' },
-      { name: 'Paramètres', path: '/admin/settings' }
+      {
+        name: 'Documents',
+        path: '/admin/documents',
+        children: [
+          { name: 'Types de documents', path: '/admin/document-types' },
+          { name: 'À valider', path: '/admin/documents/pending', badge: 5 }
+        ]
+      },
+      { name: 'Paiements', path: '/admin/payments' }
     ]
   }
   return [

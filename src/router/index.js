@@ -66,6 +66,12 @@ const routes = [
   component: () => import('@/views/admin/ClientTripsAdmin.vue'),
   meta: { requiresAuth: true,   role: 'admin' }
 },
+{
+    path: '/admin/document-types',
+    name: 'DocumentTypes',
+    component: () => import('@/views/admin/DocumentTypesView.vue'),
+    meta: { requiresAuth: true, role: 'admin' }
+},
   {
     path: '/about',
     name: 'about',
