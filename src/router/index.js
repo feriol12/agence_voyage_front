@@ -77,6 +77,12 @@ const routes = [
     name: 'about',
     component: () => import('../views/AboutView.vue'),
   },
+  {
+  path: '/admin/document-types',
+  name: 'DocumentTypes',
+  component: () => import('@/views/admin/DocumentTypesView.vue'),
+  meta: { requiresAuth: true, role: 'admin' }
+},
 ]
 
 const router = createRouter({

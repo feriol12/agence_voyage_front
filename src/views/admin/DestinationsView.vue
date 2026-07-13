@@ -89,21 +89,33 @@
           {{ dest.description }}
         </p>
 
-        <div class="mt-3 flex justify-end gap-3 border-t border-gray-100 pt-2">
+        <div class="mt-3 flex items-center justify-between border-t border-gray-100 pt-2">
+          <!-- Bouton Détail à gauche -->
           <button
-            @click="openEditModal(dest)"
-            class="flex items-center gap-1 text-xs sm:text-sm text-[#64748B] transition-colors hover:text-[#0F3B5C]"
+            @click="openDocumentModal(dest)"
+            class="flex items-center gap-1 text-xs sm:text-sm text-[#0F3B5C] hover:text-[#E67E22] transition-colors"
           >
-            <PencilSquareIcon class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span class="hidden sm:inline">Modifier</span>
+            <DocumentIcon class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span>Détail</span>
           </button>
-          <button
-            @click="confirmDelete(dest)"
-            class="flex items-center gap-1 text-xs sm:text-sm text-[#64748B] transition-colors hover:text-[#E74C3C]"
-          >
-            <TrashIcon class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span class="hidden sm:inline">Supprimer</span>
-          </button>
+
+          <!-- Boutons Modifier / Supprimer à droite -->
+          <div class="flex gap-3">
+            <button
+              @click="openEditModal(dest)"
+              class="flex items-center gap-1 text-xs sm:text-sm text-[#64748B] hover:text-[#0F3B5C] transition-colors"
+            >
+              <PencilSquareIcon class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span class="hidden sm:inline">Modifier</span>
+            </button>
+            <button
+              @click="confirmDelete(dest)"
+              class="flex items-center gap-1 text-xs sm:text-sm text-[#64748B] hover:text-[#E74C3C] transition-colors"
+            >
+              <TrashIcon class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span class="hidden sm:inline">Supprimer</span>
+            </button>
+          </div>
         </div>
       </AppCard>
     </div>
@@ -123,6 +135,13 @@
       :destination="selectedDestination"
       @saved="onSaved"
     />
+
+    <!-- Modale de gestion des documents -->
+    <DestinationDocumentModal
+      v-model:isOpen="isDocumentModalOpen"
+      :destination="selectedDestinationForDocs"
+      @saved="onDocumentSaved"
+    />
   </div>
 </template>
 
@@ -139,6 +158,7 @@ import DestinationFormModal from '@/components/destinations/DestinationFormModal
 import SearchBar from '@/components/common/SearchBar.vue'
 // import { PencilSquareIcon, TrashIcon } from '@heroicons/vue/24/outline'
 import { PhotoIcon, PencilSquareIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import DestinationDocumentModal from '@/components/destinations/DestinationDocumentModal.vue'
 
 const store = useDestinationStore()
 const confirmStore = useConfirmStore()
@@ -164,6 +184,18 @@ const onSearch = (search) => {
 
 const onResetSearch = () => {
   store.resetSearch()
+}
+
+const isDocumentModalOpen = ref(false)
+const selectedDestinationForDocs = ref(null)
+
+const openDocumentModal = (dest) => {
+  selectedDestinationForDocs.value = dest
+  isDocumentModalOpen.value = true
+}
+
+const onDocumentSaved = () => {
+  store.fetchDestinations()
 }
 
 // Navigation
