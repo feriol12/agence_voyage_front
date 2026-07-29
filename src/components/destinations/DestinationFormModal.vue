@@ -2,7 +2,7 @@
   <AppModal
     :isOpen="isOpen"
     :title="isEditing ? 'Modifier la destination' : 'Nouvelle destination'"
-    size="md"
+    size="lg"
     @close="close"
   >
     <form @submit.prevent="handleSubmit" class="space-y-4">
@@ -24,7 +24,7 @@
         :error="errors.country"
       />
 
-      <!-- Continent (select avec AppSelect uniquement) -->
+      <!-- Continent -->
       <AppSelect
         v-model="form.continent"
         label="Continent"
@@ -43,31 +43,39 @@
         :rows="3"
       />
 
-      <!-- Image -->
-      <AppInput
-        v-model="imageFile"
-        label="Image de la destination"
-        type="file"
+      <!-- ✅ ImageUploader (remplace l'ancien champ file) -->
+      <!-- Images existantes -->
+      <div v-if="isEditing && existingImages.length > 0" class="mt-2">
+        <label class="block text-sm font-medium text-[#1E293B] mb-2"> Images actuelles </label>
+        <div class="flex flex-wrap gap-3">
+          <div
+            v-for="(img, index) in existingImages"
+            :key="'existing-' + index"
+            class="relative h-20 w-20 rounded-lg overflow-hidden border border-[#E2E8F0] group"
+          >
+            <img :src="img" class="h-full w-full object-cover" />
+            <button
+              @click="removeExistingImage(index)"
+              class="absolute -top-1 -right-1 rounded-full bg-[#E74C3C] p-0.5 text-white hover:bg-[#C0392B] transition-colors opacity-0 group-hover:opacity-100"
+              type="button"
+            >
+              <XMarkIcon class="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload de nouvelles images -->
+      <ImageUploader
+        v-model="imageFiles"
+        label="Ajouter des images"
+        hint="Formats acceptés : JPG, PNG, GIF (max 2 Mo par image)"
         accept="image/*"
-        hint="Formats acceptés : JPG, PNG, GIF (max 2 Mo)"
-        @fileChange="handleImageChange"
+        :max-size="2"
+        :max-files="10"
       />
 
-      <!-- Aperçu -->
-      <div v-if="imagePreview" class="mt-2">
-        <img
-          :src="imagePreview"
-          class="h-20 w-20 object-cover rounded-lg border border-[#E2E8F0]"
-        />
-      </div>
-      <div v-else-if="form.image_url" class="mt-2">
-        <img
-          :src="form.image_url"
-          class="h-20 w-20 object-cover rounded-lg border border-[#E2E8F0]"
-        />
-      </div>
-
-      <!-- Visa requis (checkbox) -->
+      <!-- Visa requis -->
       <label class="flex items-center gap-2 cursor-pointer">
         <input
           v-model="form.visa_required"
@@ -77,7 +85,7 @@
         <span class="text-sm text-[#1E293B]">Visa requis</span>
       </label>
 
-      <!-- Active (checkbox) -->
+      <!-- Active -->
       <label class="flex items-center gap-2 cursor-pointer">
         <input
           v-model="form.is_active"
@@ -89,9 +97,9 @@
 
       <!-- Boutons -->
       <div class="flex justify-end gap-3 pt-2">
-        <AppButton variant="outline" @click="close"> Annuler </AppButton>
-        <AppButton variant="primary" type="submit">
-          {{ isEditing ? 'Mettre à jour' : 'Créer' }}
+        <AppButton variant="outline" @click="close">Annuler</AppButton>
+        <AppButton variant="primary" type="submit" :disabled="store.loading">
+          {{ store.loading ? 'Envoi en cours...' : isEditing ? 'Mettre à jour' : 'Créer' }}
         </AppButton>
       </div>
     </form>
@@ -104,7 +112,9 @@ import AppModal from '@/components/common/AppModal.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import AppInput from '@/components/common/AppInput.vue'
 import AppSelect from '@/components/common/AppSelect.vue'
+import ImageUploader from '@/components/common/ImageUploader.vue'
 import { useDestinationStore } from '@/stores/useDestinationStore'
+import { XMarkIcon } from '@heroicons/vue/24/outline'
 
 const props = defineProps({
   isOpen: Boolean,
@@ -126,16 +136,21 @@ const continentOptions = [
 
 const errors = reactive({})
 
-// ✅ AJOUT : variables pour l'image
-const imageFile = ref(null)
-const imagePreview = ref('')
+// ✅ Images existantes (URLs)
+const existingImages = ref([])
+
+// ✅ URLs des images à supprimer
+const imagesToDelete = ref([])
+
+// ✅ Nouvelles images (fichiers)
+const imageFiles = ref([])
+const imagePreviews = ref([]) // URLs d'aperçu (y compris existantes)
 
 const form = ref({
   name: '',
   country: '',
   continent: '',
   description: '',
-  image_url: '',
   visa_required: false,
   is_active: true,
 })
@@ -148,26 +163,19 @@ const validate = () => {
   return Object.keys(newErrors).length === 0
 }
 
-// ✅ AJOUT : gestion de l'image
-const handleImageChange = (file) => {
-  if (file) {
-    imageFile.value = file
-    imagePreview.value = URL.createObjectURL(file)
-  }
-}
-
 const resetForm = () => {
   form.value = {
     name: '',
     country: '',
     continent: '',
     description: '',
-    image_url: '',
     visa_required: false,
     is_active: true,
   }
-  imageFile.value = null
-  imagePreview.value = ''
+  // ✅ Réinitialiser les images
+  existingImages.value = []
+  imagesToDelete.value = []
+  imageFiles.value = []
   Object.keys(errors).forEach((key) => delete errors[key])
 }
 
@@ -175,17 +183,28 @@ watch(
   () => props.destination,
   (newVal) => {
     if (newVal) {
-      form.value = { ...newVal }
-      if (newVal.image_url) {
-        imagePreview.value = newVal.image_url
+      // Remplir les champs textes
+      form.value = {
+        name: newVal.name || '',
+        country: newVal.country || '',
+        continent: newVal.continent || '',
+        description: newVal.description || '',
+        visa_required: newVal.visa_required || false,
+        is_active: newVal.is_active ?? true,
       }
+
+      // ✅ Récupérer les images existantes
+      existingImages.value = newVal.images || []
+
+      // ✅ Réinitialiser les listes de suppression et nouvelles images
+      imagesToDelete.value = []
+      imageFiles.value = []
     } else {
       resetForm()
     }
   },
   { immediate: true },
 )
-
 const close = () => {
   emit('update:isOpen', false)
   resetForm()
@@ -194,33 +213,50 @@ const close = () => {
 const handleSubmit = async () => {
   if (!validate()) return
 
+  // Désactiver le bouton (optionnel, mais recommandé)
+  // store.loading est déjà géré, on peut le réutiliser
+
   try {
-    // ✅ Forcer les booléens
     const payload = {
-      name: form.value.name,
-      country: form.value.country,
+      name: form.value.name.trim(),
+      country: form.value.country.trim(),
       continent: form.value.continent || null,
       description: form.value.description || null,
-      visa_required: Boolean(form.value.visa_required), // ← FORCE
-      is_active: Boolean(form.value.is_active),         // ← FORCE
+      visa_required: form.value.visa_required,
+      is_active: form.value.is_active,
     }
 
-    if (imageFile.value) {
-      payload.image = imageFile.value
+    // ✅ Ajouter les nouvelles images (fichiers)
+    if (imageFiles.value.length > 0) {
+      payload.images = imageFiles.value
     }
 
-    console.log('📦 Payload nettoyé:', payload)
+    // ✅ Ajouter les images à supprimer (URLs)
+    if (imagesToDelete.value.length > 0) {
+      payload.images_to_delete = imagesToDelete.value
+    }
 
     if (isEditing.value) {
       await store.updateDestination(props.destination.id, payload)
     } else {
       await store.createDestination(payload)
     }
+
     emit('saved')
     close()
   } catch (err) {
     console.error(err)
     alert(err.response?.data?.message || 'Une erreur est survenue')
   }
+}
+// ✅ Supprimer une image existante (avant envoi)
+const removeExistingImage = (index) => {
+  const removed = existingImages.value.splice(index, 1)[0]
+  imagesToDelete.value.push(removed)
+}
+
+// ✅ Supprimer une nouvelle image (avant envoi)
+const removeNewImage = (index) => {
+  imageFiles.value.splice(index, 1)
 }
 </script>

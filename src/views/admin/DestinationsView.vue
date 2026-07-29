@@ -36,74 +36,77 @@
     <!-- Liste des destinations -->
     <div class="grid grid-cols-2 gap-2 sm:gap-4 md:grid-cols-2 lg:grid-cols-3">
       <AppCard v-for="dest in store.destinations" :key="dest.id" class="overflow-hidden">
-        <!-- Image en haut -->
-        <div class="relative w-full h-44 bg-gray-100 overflow-hidden">
-          <img
-            v-if="dest.image_url"
-            :src="dest.image_url"
-            :alt="dest.name"
-            class="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-          />
-          <div
-            v-else
-            class="w-full h-full flex flex-col items-center justify-center text-[#94A3B8]"
-          >
-            <PhotoIcon class="h-12 w-12" />
-            <span class="mt-1 text-xs font-medium">Aucune image</span>
+        <!-- ✅ Carrousel d'images -->
+        <ImageCarousel :images="dest.images || []" :interval="3000" />
+
+        <!-- Le reste de la carte -->
+        <div class="p-4">
+          <div class="flex items-start justify-between gap-1">
+            <h3 class="font-semibold text-sm sm:text-base text-[#1E293B] truncate">
+              {{ dest.name }}
+            </h3>
+            <div class="flex flex-col items-end gap-0.5">
+              <AppSwitch
+                :modelValue="dest.is_active"
+                @toggle="toggleActive(dest)"
+                class="scale-75 sm:scale-100"
+              />
+              <span
+                class="text-[10px] sm:text-xs"
+                :class="dest.is_active ? 'text-[#27AE60]' : 'text-[#94A3B8]'"
+              >
+                {{ dest.is_active ? 'Actif' : 'Inactif' }}
+              </span>
+            </div>
           </div>
-        </div>
-        <div class="flex items-start justify-between gap-1">
-          <h3 class="font-semibold text-sm sm:text-base text-[#1E293B] truncate">
-            {{ dest.name }}
-          </h3>
-          <div class="flex flex-col items-end gap-0.5">
-            <AppSwitch
-              :modelValue="dest.is_active"
-              @toggle="toggleActive(dest)"
-              class="scale-75 sm:scale-100"
-            />
-            <span
-              class="text-[10px] sm:text-xs"
-              :class="dest.is_active ? 'text-[#27AE60]' : 'text-[#94A3B8]'"
+
+          <p class="text-xs sm:text-sm text-[#64748B] mt-1 truncate">{{ dest.country }}</p>
+          <p v-if="dest.continent" class="text-[10px] sm:text-xs text-[#94A3B8]">
+            {{ dest.continent }}
+          </p>
+
+          <div class="mt-2 flex flex-wrap gap-1">
+            <AppBadge
+              :variant="dest.visa_required ? 'warning' : 'success'"
+              class="text-[10px] sm:text-xs px-1.5 py-0.5"
             >
-              {{ dest.is_active ? 'Actif' : 'Inactif' }}
-            </span>
+              {{ dest.visa_required ? 'Visa requis' : 'Visa non requis' }}
+            </AppBadge>
           </div>
-        </div>
 
-        <p class="text-xs sm:text-sm text-[#64748B] mt-1 truncate">{{ dest.country }}</p>
-        <p v-if="dest.continent" class="text-[10px] sm:text-xs text-[#94A3B8]">
-          {{ dest.continent }}
-        </p>
-
-        <div class="mt-2 flex flex-wrap gap-1">
-          <AppBadge
-            :variant="dest.visa_required ? 'warning' : 'success'"
-            class="text-[10px] sm:text-xs px-1.5 py-0.5"
+          <p
+            v-if="dest.description"
+            class="text-xs text-[#64748B] mt-2 line-clamp-2 hidden sm:block"
           >
-            {{ dest.visa_required ? 'Visa requis' : 'Visa non requis' }}
-          </AppBadge>
-        </div>
+            {{ dest.description }}
+          </p>
 
-        <p v-if="dest.description" class="text-xs text-[#64748B] mt-2 line-clamp-2 hidden sm:block">
-          {{ dest.description }}
-        </p>
+          <div class="mt-3 flex items-center justify-between border-t border-gray-100 pt-2">
+            <button
+              @click="openDocumentModal(dest)"
+              class="flex items-center gap-1 text-xs sm:text-sm text-[#0F3B5C] hover:text-[#E67E22] transition-colors"
+            >
+              <!-- <DocumentIcon class="h-3.5 w-3.5 sm:h-4 sm:w-4" /> -->
+              <span>Détail</span>
+            </button>
 
-        <div class="mt-3 flex justify-end gap-3 border-t border-gray-100 pt-2">
-          <button
-            @click="openEditModal(dest)"
-            class="flex items-center gap-1 text-xs sm:text-sm text-[#64748B] transition-colors hover:text-[#0F3B5C]"
-          >
-            <PencilSquareIcon class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span class="hidden sm:inline">Modifier</span>
-          </button>
-          <button
-            @click="confirmDelete(dest)"
-            class="flex items-center gap-1 text-xs sm:text-sm text-[#64748B] transition-colors hover:text-[#E74C3C]"
-          >
-            <TrashIcon class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span class="hidden sm:inline">Supprimer</span>
-          </button>
+            <div class="flex gap-3">
+              <button
+                @click="openEditModal(dest)"
+                class="flex items-center gap-1 text-xs sm:text-sm text-[#64748B] hover:text-[#E74C3C] transition-colors"
+              >
+                <PencilSquareIcon class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span class="hidden sm:inline">Modifier</span>
+              </button>
+              <button
+                @click="confirmDelete(dest)"
+                class="flex items-center gap-1 text-xs sm:text-sm text-[#64748B] hover:text-[#E74C3C] transition-colors"
+              >
+                <TrashIcon class="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span class="hidden sm:inline">Supprimer</span>
+              </button>
+            </div>
+          </div>
         </div>
       </AppCard>
     </div>
@@ -123,6 +126,13 @@
       :destination="selectedDestination"
       @saved="onSaved"
     />
+
+    <!-- Modale de gestion des documents -->
+    <DestinationDocumentModal
+      v-model:isOpen="isDocumentModalOpen"
+      :destination="selectedDestinationForDocs"
+      @saved="onDocumentSaved"
+    />
   </div>
 </template>
 
@@ -138,7 +148,9 @@ import AppPagination from '@/components/common/AppPagination.vue'
 import DestinationFormModal from '@/components/destinations/DestinationFormModal.vue'
 import SearchBar from '@/components/common/SearchBar.vue'
 // import { PencilSquareIcon, TrashIcon } from '@heroicons/vue/24/outline'
-import { PhotoIcon, PencilSquareIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import { DocumentIcon, PencilSquareIcon, TrashIcon } from '@heroicons/vue/24/outline'
+import DestinationDocumentModal from '@/components/destinations/DestinationDocumentModal.vue'
+import ImageCarousel from '@/components/common/ImageCarousel.vue'
 
 const store = useDestinationStore()
 const confirmStore = useConfirmStore()
@@ -164,6 +176,18 @@ const onSearch = (search) => {
 
 const onResetSearch = () => {
   store.resetSearch()
+}
+
+const isDocumentModalOpen = ref(false)
+const selectedDestinationForDocs = ref(null)
+
+const openDocumentModal = (dest) => {
+  selectedDestinationForDocs.value = dest
+  isDocumentModalOpen.value = true
+}
+
+const onDocumentSaved = () => {
+  store.fetchDestinations()
 }
 
 // Navigation
