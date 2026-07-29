@@ -76,8 +76,8 @@
       <!-- Boutons -->
       <div class="flex justify-end gap-3 pt-2">
         <AppButton variant="outline" @click="close">Annuler</AppButton>
-        <AppButton variant="primary" type="submit">
-          {{ isEditing ? 'Mettre à jour' : 'Créer' }}
+        <AppButton variant="primary" type="submit" :disabled="store.loading">
+          {{ store.loading ? 'Envoi en cours...' : isEditing ? 'Mettre à jour' : 'Créer' }}
         </AppButton>
       </div>
     </form>
