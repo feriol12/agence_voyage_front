@@ -1,7 +1,7 @@
 <template>
   <div 
     class="relative w-full bg-gray-100 overflow-hidden group/carousel" 
-    :style="{ aspectRatio: isMobile ? '4/3' : '16/9' }"
+    :style="{ aspectRatio: isMobile ? '1/1' : '16/9' }"
     @mouseenter="stopAutoplay"
     @mouseleave="startAutoplay"
     @touchstart="handleTouchStart"
@@ -102,7 +102,7 @@ const props = defineProps({
   },
   interval: {
     type: Number,
-    default: 4000 //  4 secondes comme convenu
+    default: 4000
   },
   autoplay: {
     type: Boolean,
@@ -114,7 +114,6 @@ const currentIndex = ref(0)
 let intervalId = null
 const isMobile = ref(window.innerWidth < 640)
 
-// Swipe (mobile)
 let touchStartX = 0
 let touchEndX = 0
 
@@ -134,7 +133,6 @@ const handleTouchEnd = () => {
   }
 }
 
-// Navigation
 const next = () => {
   if (props.images.length === 0) return
   currentIndex.value = (currentIndex.value + 1) % props.images.length
@@ -152,7 +150,6 @@ const goTo = (index) => {
   resetAutoplay()
 }
 
-// Autoplay
 const resetAutoplay = () => {
   stopAutoplay()
   startAutoplay()
@@ -170,19 +167,16 @@ const stopAutoplay = () => {
   }
 }
 
-// Responsive
 const handleResize = () => {
   isMobile.value = window.innerWidth < 640
 }
 
-// Watch
 watch(() => props.images, () => {
   currentIndex.value = 0
   stopAutoplay()
   startAutoplay()
 }, { immediate: true })
 
-// Lifecycle
 onMounted(() => {
   startAutoplay()
   window.addEventListener('resize', handleResize)
